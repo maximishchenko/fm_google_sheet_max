@@ -1,0 +1,88 @@
+[project]
+name = "google_sheet_max"
+version = "0.1.0"
+description = "Foura Mebel Apps"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+    "commitizen==2.42.1",
+    "coverage>=7.2.7",
+    "pre-commit>=2.21.0",
+    "ruff>=0.16.3",
+]
+
+
+[tool.ruff]
+fix = true
+
+exclude = [
+    '.git',
+    '.venv',
+    '__pycache__',
+    '.ruff_cache',
+    '.mypy_cache',
+]
+
+line-length = 79
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+    "N", # PEP8 naming
+    "B", # flake8-bugbear
+    "D", # pydocstyle
+    "C4", # flake8-comprehensions
+    "RUF", # ruff specific rules
+]
+
+ignore = [
+    "C408",   # Ненужный вызов dict, list и т.д.
+    "RUF001", # Игнорирование похожих символов с разными ASCII
+    "RUF002", # Игнорирование похожих символов с разными ASCII
+    "RUF003", # Игнорирование похожих символов с разными ASCII
+    "RUF100",
+    "S110",   # try-except-pass
+    "D203",   # Требует пустую строку перед классом (конфликтует с D211)
+    "D212",   # Требует начинать многострочное описание на первой строке (конфликтует с D213)
+    "D213",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+strict = true
+
+
+explicit_package_bases = true
+namespace_packages = true
+# mypy_path = ["$MYPY_CONFIG_FILE_DIR/src"]
+
+
+exclude = [
+    '.venv',
+]
+
+[tool.coverage.run]
+source = ["Proto"]
+omit = [
+    "tests/*",
+    "*/tests/*",
+]

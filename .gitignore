@@ -3,4 +3,6 @@ sent_tasks.json
 sent_tasks.json.broken
 /**/__pycache__/
 /**/.mypy_cache/
+/**/.ruff_cache/
+.venv/
 TODO.md

@@ -1,0 +1,27 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: run-tests
+        name: Run tests
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: make tests-all
+    -   id: typing-all
+        name: Check types
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: make typing-all
+    -   id: lint-all
+        name: Lint code
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: make lint-all
+    -   id: commitizen
+        name: commitizen check
+        entry: make check-commit-msg
+        language: system
+        pass_filenames: true
+        stages: [commit-msg]

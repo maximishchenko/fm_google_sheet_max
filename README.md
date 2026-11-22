@@ -58,8 +58,8 @@ curl.exe -k -H "Authorization: <токен>" https://platform-api2.max.ru/update
 ## Запуск
 
 ```bash
-python manager_tasks.py            # обработать все таблицы из config.json
-python manager_tasks.py sheet.csv  # отладка: вывести задачи из локального CSV без отправки
+python main.py            # обработать все таблицы из config.json
+python main.py sheet.csv  # отладка: вывести задачи из локального CSV без отправки
 ```
 
 ### Запуск по расписанию (Windows, каждые 5 минут)
@@ -67,17 +67,30 @@ python manager_tasks.py sheet.csv  # отладка: вывести задачи
 Планировщик заданий → создать задачу:
 
 - Программа: `python`
-- Аргументы: `C:\путь\к\manager_tasks.py`
+- Аргументы: `C:\путь\к\main.py`
 - Триггер: по расписанию, повторять каждые 5 минут.
 
 ## Структура проекта
 
 | Файл | Назначение |
 |---|---|
-| `manager_tasks.py` | основной скрипт |
+| `main.py` | основной скрипт |
+| `max_bot.py` | класс `MaxBot` — клиент Bot API мессенджера MAX |
+| `tasks_report.py` | классы `Task`, `TaskSheet`, `TasksReport` — получение задач из Google-таблицы и построение отчёта |
+| `state_store.py` | класс `SentTasksStore` — учёт уже отправленных задач (`sent_tasks.json`) |
 | `config.json` | таблицы, получатели, токен бота (не коммитить — содержит секреты) |
 | `sent_tasks.json` | история отправленных задач, создаётся автоматически |
 | `AGENTS.md` | исходная постановка задачи |
+
+## Качество кода
+
+Код проходит строгие проверки (конфигурация в `pyproject.toml`):
+
+```bash
+make lint-all     # Ruff, без автоисправлений
+make typing-all   # mypy в strict-режиме
+make check-all    # ruff + mypy + тесты
+```
 
 ## Особенности
 

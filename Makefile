@@ -1,0 +1,76 @@
+ENV ?= DEV
+ENV_TARGET ?= requirements.txt
+
+# pre-commit captures Python output and expects UTF-8 on Windows as well.
+export PYTHONIOENCODING := utf-8
+export UV_LINK_MODE := copy
+
+UV_ENV_FLAGS_DEV :=
+UV_ENV_FLAGS_PROD := --no-dev
+UV_ENV_FLAGS = $(UV_ENV_FLAGS_$(ENV))
+
+CHECK_ENV = $(if $(and $(filter 1,$(words $(ENV))),$(filter $(ENV),DEV PROD)),,$(error ENV must be DEV or PROD, got "$(ENV)"))
+CHECK_FILE = $(if $(strip $(FILE)),,$(error FILE is not set, usage: make $@ FILE=path/to/file.py))
+
+.PHONY: lint-all typing-all tests-all check-all \
+        lint-file typing-file test-file tests-file check-file \
+        requirements pre-commit check-commit-msg sync
+
+# Проверить весь проект с помощью Ruff без автоматического исправления.
+lint-all:
+	uv run ruff check --no-fix .
+
+# Проверить типы во всём проекте в строгом режиме.
+typing-all:
+	uv run --with mypy -- python -m mypy --strict .
+
+# Запустить все тесты unittest из tests.
+tests-all:
+	uv run python -m unittest discover -v -s tests -t .
+
+# Проверить указанный файл FILE с помощью Ruff.
+lint-file:
+	$(CHECK_FILE)
+	uv run ruff check --no-fix "$(FILE)"
+
+# Проверить типы в файле FILE в строгом режиме.
+typing-file:
+	$(CHECK_FILE)
+	uv run --with mypy -- python -m mypy --strict "$(FILE)"
+
+# Запустить тесты из файла FILE внутри tests.
+test-file:
+	$(CHECK_FILE)
+	uv run python -m unittest discover -v -s "$(dir $(subst \,/,$(FILE)))" -t . -p "$(notdir $(subst \,/,$(FILE)))"
+
+# Альтернативное имя цели test-file, используемое в документации.
+tests-file: test-file
+
+# Экспортировать зависимости ENV=DEV или PROD в файл ENV_TARGET.
+requirements:
+	$(CHECK_ENV)
+	uv export $(UV_ENV_FLAGS) --format requirements.txt --output-file "$(ENV_TARGET)"
+
+# Выполнить проверки Ruff, mypy и все тесты.
+check-all: lint-all typing-all tests-all
+
+# Выполнить проверки Ruff, mypy и тесты для файла FILE.
+check-file: lint-file typing-file test-file
+
+# Запустить все настроенные проверки pre-commit для всех файлов.
+pre-commit:
+	uv run python -m pre_commit run --all-files
+
+# Проверить сообщение коммита из файла, переданного hook commit-msg.
+check-commit-msg:
+	uv run python -m commitizen check --commit-msg-file "$(filter-out $@,$(MAKECMDGOALS))"
+
+install-hooks:
+	uv run python -m pre_commit install
+	uv run python -m pre_commit install --hook-type commit-msg
+	uv run python -m pre_commit install --hook-type post-commit
+
+# Синхронизировать окружение с зависимостями ENV=DEV или PROD.
+sync:
+	$(CHECK_ENV)
+	uv sync $(UV_ENV_FLAGS)
