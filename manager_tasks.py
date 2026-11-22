@@ -18,6 +18,11 @@
 Токен можно также задать переменной окружения MAX_BOT_TOKEN
 (переменная имеет приоритет над config.json).
 
+Скрипт рассчитан на запуск по расписанию: уже отправленные задачи
+запоминаются в файле sent_tasks.json, повторно не отправляются.
+Если новых задач на сегодня нет — сообщение не отправляется.
+Список отправленных сбрасывается каждый день.
+
 Запуск:
     python manager_tasks.py                  — обработать все таблицы из config.json
     python manager_tasks.py sheet.csv        — вывести задачи из локального CSV (без отправки)
@@ -38,6 +43,38 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+STATE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "sent_tasks.json"
+)
+
+
+def load_state():
+    """Читает файл состояния с отправленными задачами и сбрасывает устаревшие."""
+    try:
+        with open(STATE_PATH, encoding="utf-8") as f:
+            state = json.load(f)
+    except FileNotFoundError:
+        state = {}
+    except ValueError as exc:
+        backup = STATE_PATH + ".broken"
+        os.replace(STATE_PATH, backup)
+        print(
+            f"ВНИМАНИЕ: {STATE_PATH} повреждён ({exc}).\n"
+            f"Файл переименован в {backup}, история отправленных задач "
+            "сброшена — все сегодняшние задачи будут отправлены заново."
+        )
+        state = {}
+    today_key = date.today().isoformat()
+    return {
+        sheet_key: entry
+        for sheet_key, entry in state.items()
+        if entry.get("date") == today_key
+    }
+
+
+def save_state(state):
+    with open(STATE_PATH, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
 
 MAX_API_URL = "https://platform-api2.max.ru/messages"
 MAX_MESSAGE_LIMIT = 4000  # лимит длины сообщения в MAX
@@ -111,6 +148,13 @@ def find_today_tasks(header, rows, today):
             {
                 "manager": cell(row, "Ответственный"),
                 "id": cell(row, "№ заявки / заказа"),
+                "key": "|".join(
+                    [
+                        cell(row, "№ заявки / заказа"),
+                        cell(row, "Объект"),
+                        cell(row, "Задача / этап"),
+                    ]
+                ),
                 "client": cell(row, "Клиент"),
                 "phone": cell(row, "Телефон клиента"),
                 "address": cell(row, "Адрес замера / город"),
@@ -122,10 +166,10 @@ def find_today_tasks(header, rows, today):
     return tasks
 
 
-def build_report(today, tasks):
+def build_report(today, tasks, title="Задачи"):
     manager = tasks[0]["manager"] if tasks else ""
     lines = [
-        f"Задачи на {today.strftime('%d.%m.%Y')}"
+        f"{title} на {today.strftime('%d.%m.%Y')}"
         + (f" — {manager}" if manager else ""),
         "=" * 50,
     ]
@@ -232,6 +276,8 @@ def main():
         print("В config.json не задан список таблиц (tables).")
         sys.exit(1)
 
+    state = load_state()
+
     for table in tables:
         url = table.get("url", "")
         chat_ids = [str(c) for c in table.get("chat_ids", [])]
@@ -242,17 +288,31 @@ def main():
         except Exception as exc:
             print(f"  Не удалось загрузить таблицу: {exc}")
             continue
-        report = build_report(today, tasks)
-        print(report)
+        print(build_report(today, tasks))
         if not token:
             print("  Токен бота не задан — сообщения не отправлены.")
             continue
+
+        sheet_key = sheet_csv_url(url)
+        entry = state.setdefault(
+            sheet_key, {"date": today.isoformat(), "sent": {}}
+        )
         for chat_id in chat_ids:
+            sent_ids = set(entry["sent"].get(chat_id, []))
+            new_tasks = [t for t in tasks if t["key"] not in sent_ids]
+            if not new_tasks:
+                print(f"  Чат {chat_id}: новых задач нет, не отправляю.")
+                continue
+            report = build_report(today, new_tasks, title="Новые задачи")
             try:
                 send_to_max(report, token, chat_id)
-                print(f"  Отправлено в чат {chat_id}.")
+                entry["sent"].setdefault(chat_id, [])
+                entry["sent"][chat_id].extend(t["key"] for t in new_tasks)
+                print(f"  Чат {chat_id}: отправлено {len(new_tasks)} новых задач.")
             except Exception as exc:
                 print(f"  Не удалось отправить в чат {chat_id}: {exc}")
+
+    save_state(state)
 
 
 if __name__ == "__main__":
