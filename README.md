@@ -77,6 +77,20 @@ google-sheet-max                      # то же через установле�
 Либо используйте собранный exe (см. ниже): программа —
 `dist\google-sheet-max.exe`, рабочая папка — каталог с `config.json`.
 
+## Управление версией
+
+Версия хранится в `pyproject.toml` и управляется через Commitizen:
+
+```bash
+make bump                   # авто-повышение по типам коммитов (feat→minor, fix→patch)
+make bump VERSION=1.5.3     # установить точную версию
+make bump INCREMENT=MAJOR   # принудительный уровень (MAJOR/MINOR/PATCH)
+```
+
+Каждая цель обновляет `version` в `pyproject.toml`, создаёт релизный
+коммит и git-тег `v<версия>`. Перед выполнением можно посмотреть
+результат через `uv run cz bump --dry-run --yes`.
+
 ## Сборка exe
 
 Самодостаточный исполняемый файл собирается через Nuitka
