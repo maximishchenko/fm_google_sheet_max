@@ -1,6 +1,6 @@
 [project]
 name = "google_sheet_max"
-version = "0.3.0"
+version = "0.3.1"
 description = "Foura Mebel Apps"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -114,7 +114,7 @@ exclude_lines = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.0"
+version = "0.3.1"
 tag_format = "v$version"
 version_files = [
     "pyproject.toml:^version =",
