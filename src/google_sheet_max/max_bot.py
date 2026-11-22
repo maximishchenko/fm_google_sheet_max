@@ -52,7 +52,8 @@ class MaxBot:
             context = ssl.create_default_context()
             for url in MINCIFRA_CERT_URLS:
                 try:
-                    with urllib.request.urlopen(url) as response:
+                    # URL сертификатов задан константой, схема https
+                    with urllib.request.urlopen(url) as response:  # nosec B310
                         context.load_verify_locations(
                             cadata=response.read().decode("utf-8"),
                         )
@@ -86,11 +87,12 @@ class MaxBot:
         )
         try:
             try:
-                response = urllib.request.urlopen(request)
+                # URL API задан константой класса, схема https
+                response = urllib.request.urlopen(request)  # nosec B310
             except urllib.error.URLError as exc:
                 if "CERTIFICATE_VERIFY_FAILED" not in str(exc.reason):
                     raise
-                response = urllib.request.urlopen(
+                response = urllib.request.urlopen(  # nosec B310
                     request, context=self.ssl_context
                 )
         except urllib.error.HTTPError as exc:
@@ -123,7 +125,6 @@ class MaxBot:
             for i in range(0, len(text), self.MESSAGE_LIMIT)
         ]
         for chunk in chunks:
-            last_error: MaxApiError | None = None
             for param in ("chat_id", "user_id"):
                 try:
                     self._request(
@@ -134,10 +135,6 @@ class MaxBot:
                     )
                     break
                 except MaxApiError as exc:
-                    last_error = exc
                     if exc.code == HTTP_NOT_FOUND and param == "chat_id":
                         continue  # попробуем отправить по user_id
                     raise
-            else:
-                if last_error is not None:
-                    raise last_error

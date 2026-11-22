@@ -19,6 +19,18 @@ repos:
         types: [python]
         pass_filenames: false
         entry: make lint-all
+    -   id: vulture-all
+        name: Find dead code
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: make vulture-all
+    -   id: bandit-all
+        name: Security audit
+        language: system
+        types: [python]
+        pass_filenames: false
+        entry: make bandit-all
     -   id: commitizen
         name: commitizen check
         entry: make check-commit-msg

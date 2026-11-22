@@ -6,3 +6,4 @@ sent_tasks.json.broken
 /**/.ruff_cache/
 .venv/
 TODO.md
+.coverage

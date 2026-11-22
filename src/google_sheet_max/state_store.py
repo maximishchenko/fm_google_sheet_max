@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from tasks_report import Task
+    from google_sheet_max.tasks_report import Task
 
 
 class SentTasksStore:

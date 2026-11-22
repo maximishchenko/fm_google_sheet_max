@@ -91,7 +91,7 @@ class TaskSheet:
         request = urllib.request.Request(
             self.csv_url, headers={"User-Agent": "Mozilla/5.0"},
         )
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request) as response:  # nosec B310
             text: str = response.read().decode("utf-8-sig")
             return text
 

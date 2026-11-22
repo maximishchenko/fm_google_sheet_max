@@ -1,4 +1,4 @@
-# manager_tasks
+# google_sheet_max
 
 Python-скрипт, который забирает задачи менеджеров на сегодня из Google-таблиц и отправляет их в мессенджер MAX через бота.
 
@@ -58,8 +58,11 @@ curl.exe -k -H "Authorization: <токен>" https://platform-api2.max.ru/update
 ## Запуск
 
 ```bash
-python main.py            # обработать все таблицы из config.json
-python main.py sheet.csv  # отладка: вывести задачи из локального CSV без отправки
+python -m google_sheet_max            # обработать все таблицы из config.json
+python -m google_sheet_max sheet.csv  # отладка: вывести задачи из локального CSV
+google-sheet-max                      # то же через установленный entry point
+
+Запускать нужно из каталога, где лежат config.json и sent_tasks.json.
 ```
 
 ### Запуск по расписанию (Windows, каждые 5 минут)
@@ -67,17 +70,19 @@ python main.py sheet.csv  # отладка: вывести задачи из л�
 Планировщик заданий → создать задачу:
 
 - Программа: `python`
-- Аргументы: `C:\путь\к\main.py`
+- Программа: `uv`
+- Аргументы: `run google-sheet-max`
+- Рабочая папка: каталог проекта (там лежит config.json)
 - Триггер: по расписанию, повторять каждые 5 минут.
 
 ## Структура проекта
 
 | Файл | Назначение |
 |---|---|
-| `main.py` | основной скрипт |
-| `max_bot.py` | класс `MaxBot` — клиент Bot API мессенджера MAX |
-| `tasks_report.py` | классы `Task`, `TaskSheet`, `TasksReport` — получение задач из Google-таблицы и построение отчёта |
-| `state_store.py` | класс `SentTasksStore` — учёт уже отправленных задач (`sent_tasks.json`) |
+| `src/google_sheet_max/main.py` | оркестрация: конфиг, цикл по таблицам, отправка |
+| `src/google_sheet_max/max_bot.py` | класс `MaxBot` — клиент Bot API мессенджера MAX |
+| `src/google_sheet_max/tasks_report.py` | классы `Task`, `TaskSheet`, `TasksReport` — задачи и отчёт |
+| `src/google_sheet_max/state_store.py` | класс `SentTasksStore` — учёт отправленных задач |
 | `config.json` | таблицы, получатели, токен бота (не коммитить — содержит секреты) |
 | `sent_tasks.json` | история отправленных задач, создаётся автоматически |
 | `AGENTS.md` | исходная постановка задачи |
@@ -89,7 +94,17 @@ python main.py sheet.csv  # отладка: вывести задачи из л�
 ```bash
 make lint-all     # Ruff, без автоисправлений
 make typing-all   # mypy в strict-режиме
-make check-all    # ruff + mypy + тесты
+make vulture-all  # поиск мёртвого кода (vulture)
+make bandit-all   # проверка на уязвимости (bandit)
+make tests-all    # юнит-тесты (unittest) с проверкой покрытия 100%
+make check-all    # ruff + mypy + vulture + bandit + тесты
+```
+
+Покрытие тестами — 100%:
+
+```bash
+uv run coverage run -m unittest discover -s tests -t .
+uv run coverage report
 ```
 
 ## Особенности

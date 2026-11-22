@@ -3,7 +3,7 @@
 Задачей на сегодня считается строка, у которой дедлайн приходится на
 сегодняшнее число (состояние «Сегодня»).
 
-Настройки задаются в файле config.json рядом со скриптом:
+Настройки задаются в файле config.json в текущем рабочем каталоге:
 
 {
     "max_bot_token": "токен бота MAX",
@@ -23,9 +23,9 @@
 Если новых задач на сегодня нет — сообщение не отправляется.
 Список отправленных сбрасывается каждый день.
 
-Запуск:
-    python main.py                  — обработать все таблицы из config.json
-    python main.py sheet.csv   — вывести задачи из локального CSV
+Запуск из корня проекта:
+    python -m google_sheet_max            — обработать таблицы из config.json
+    python -m google_sheet_max sheet.csv — вывести задачи из локального CSV
 """
 
 from __future__ import annotations
@@ -38,16 +38,15 @@ from datetime import date
 from pathlib import Path
 from typing import Any, cast
 
-from max_bot import MaxApiError, MaxBot
-from state_store import SentTasksStore
-from tasks_report import TaskSheet, TasksReport
+from google_sheet_max.max_bot import MaxApiError, MaxBot
+from google_sheet_max.state_store import SentTasksStore
+from google_sheet_max.tasks_report import TaskSheet, TasksReport
 
 if sys.platform == "win32":
     cast("Any", sys.stdout).reconfigure(encoding="utf-8")
 
-BASE_DIR = Path(__file__).resolve().parent
-CONFIG_PATH = BASE_DIR / "config.json"
-STATE_PATH = BASE_DIR / "sent_tasks.json"
+CONFIG_PATH = Path.cwd() / "config.json"
+STATE_PATH = Path.cwd() / "sent_tasks.json"
 
 # ошибки, при которых таблицу или отправку просто пропускаем
 RECOVERABLE_ERRORS = (OSError, ValueError, urllib.error.URLError, MaxApiError)
