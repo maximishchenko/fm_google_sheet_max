@@ -19,6 +19,7 @@ packages = ["src/google_sheet_max"]
 
 [dependency-groups]
 dev = [
+    "agentmd-gen>=0.6.0",
     "bandit>=1.9.4",
     "commitizen==2.42.1",
     "coverage>=7.2.7",
