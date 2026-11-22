@@ -13,7 +13,7 @@ CHECK_ENV = $(if $(and $(filter 1,$(words $(ENV))),$(filter $(ENV),DEV PROD)),,$
 CHECK_FILE = $(if $(strip $(FILE)),,$(error FILE is not set, usage: make $@ FILE=path/to/file.py))
 
 .PHONY: lint-all typing-all tests-all check-all vulture-all bandit-all \
-        secrets-all \
+        secrets-all build-exe \
         lint-file typing-file test-file tests-file check-file \
         requirements pre-commit check-commit-msg sync
 
@@ -90,3 +90,10 @@ install-hooks:
 sync:
 	$(CHECK_ENV)
 	uv sync $(UV_ENV_FLAGS)
+
+# Собрать самодостаточный google-sheet-max.exe с помощью Nuitka.
+build-exe:
+	uv run python -m nuitka --onefile --assume-yes-for-downloads \
+		--include-package=google_sheet_max \
+		--output-dir=dist --output-filename=google-sheet-max.exe \
+		--remove-output src/google_sheet_max/__main__.py

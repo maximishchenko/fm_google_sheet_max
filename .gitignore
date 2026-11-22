@@ -7,3 +7,5 @@ sent_tasks.json.broken
 .venv/
 TODO.md
 .coverage
+dist/
+nuitka-crash-report.xml
