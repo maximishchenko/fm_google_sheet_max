@@ -104,4 +104,4 @@ build-exe:
 #   make bump VERSION=1.5.3        — установить точную версию
 #   make bump INCREMENT=MAJOR      — принудительный уровень (MAJOR/MINOR/PATCH)
 bump:
-	PYTHONUTF8=1 uv run cz bump --yes --no-verify $(if $(VERSION),$(VERSION),$(if $(INCREMENT),--increment $(INCREMENT),))
+	uv run cz bump --yes --no-verify $(if $(VERSION),$(VERSION),$(if $(INCREMENT),--increment $(INCREMENT),))
