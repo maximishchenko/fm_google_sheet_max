@@ -13,6 +13,7 @@ CHECK_ENV = $(if $(and $(filter 1,$(words $(ENV))),$(filter $(ENV),DEV PROD)),,$
 CHECK_FILE = $(if $(strip $(FILE)),,$(error FILE is not set, usage: make $@ FILE=path/to/file.py))
 
 .PHONY: lint-all typing-all tests-all check-all vulture-all bandit-all \
+        secrets-all \
         lint-file typing-file test-file tests-file check-file \
         requirements pre-commit check-commit-msg sync
 
@@ -31,6 +32,11 @@ vulture-all:
 # Проверить код на уязвимости с помощью bandit.
 bandit-all:
 	uv run --with bandit -- bandit -r src
+
+# Проверить репозиторий на утечку секретов с помощью detect-secrets.
+secrets-all:
+	uv run --with detect-secrets -- detect-secrets scan \
+		| uv run python -c "import json, sys; results = json.load(sys.stdin).get('results', {}); [print(f'{name}: {len(items)} секрет(ов)') for name, items in results.items()]; sys.exit(bool(results))"
 
 # Запустить все тесты unittest из tests с проверкой покрытия 100%.
 tests-all:
@@ -61,8 +67,8 @@ requirements:
 	$(CHECK_ENV)
 	uv export $(UV_ENV_FLAGS) --format requirements.txt --output-file "$(ENV_TARGET)"
 
-# Выполнить проверки Ruff, mypy, vulture, bandit и все тесты.
-check-all: lint-all typing-all vulture-all bandit-all tests-all
+# Выполнить проверки Ruff, mypy, vulture, bandit, секреты и все тесты.
+check-all: lint-all typing-all vulture-all bandit-all secrets-all tests-all
 
 # Выполнить проверки Ruff, mypy и тесты для файла FILE.
 check-file: lint-file typing-file test-file

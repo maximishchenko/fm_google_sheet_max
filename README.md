@@ -96,8 +96,9 @@ make lint-all     # Ruff, без автоисправлений
 make typing-all   # mypy в strict-режиме
 make vulture-all  # поиск мёртвого кода (vulture)
 make bandit-all   # проверка на уязвимости (bandit)
+make secrets-all  # проверка на утечку секретов (detect-secrets)
 make tests-all    # юнит-тесты (unittest) с проверкой покрытия 100%
-make check-all    # ruff + mypy + vulture + bandit + тесты
+make check-all    # ruff + mypy + vulture + bandit + секреты + тесты
 ```
 
 Покрытие тестами — 100%:
